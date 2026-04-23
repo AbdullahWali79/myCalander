@@ -1,43 +1,51 @@
-# My Calendar Manager
+# Calendar Manager — Bot Maker by Abdullah
 
-Vercel-ready calendar app with:
+Google Calendar manager powered by Claude AI + MCP.
 
-- Static front-end in [`index.html`](./index.html)
-- Server-side Vercel Functions in [`api/calendar.js`](./api/calendar.js) and [`api/status.js`](./api/status.js)
-- Anthropic Messages API + CalendarMCP support
+## Vercel Deployment (5 minutes)
 
-## Required environment variables
+### Step 1 — GitHub pe upload karo
+1. github.com pe new repo banao: `calendar-manager`
+2. Ye sari files upload karo (ya git push karo)
 
-Set these in Vercel Project Settings -> Environment Variables:
+### Step 2 — Vercel pe deploy karo
+1. vercel.com → New Project → GitHub repo select karo
+2. Deploy click karo
 
-- `ANTHROPIC_API_KEY`
-- `CALENDAR_MCP_AUTH_TOKEN` from your CalendarMCP dashboard API key
+### Step 3 — Environment Variables add karo
+Vercel Dashboard → Project → Settings → Environment Variables:
 
-Optional:
+**REQUIRED (ye 2 zaroor daalo):**
+```
+ANTHROPIC_API_KEY = sk-ant-api03-...
+CALENDAR_MCP_AUTH_TOKEN = (Google OAuth token - neeche dekho)
+```
 
-- `CALENDAR_MCP_URL` default: `https://calendarmcp.ai/api/mcp`
-- `CALENDAR_MCP_NAME` default: `google-calendar`
-- `APP_TIMEZONE` default: `Asia/Karachi`
-- `ANTHROPIC_MODEL` default: `claude-sonnet-4-20250514`
+**OPTIONAL (already code mein hain, change karna ho to daalo):**
+```
+CALENDAR_MCP_URL = https://calendarmcp.googleapis.com/mcp/v1
+CALENDAR_MCP_NAME = google-calendar
+APP_TIMEZONE = Asia/Karachi
+ANTHROPIC_MODEL = claude-sonnet-4-20250514
+```
 
-You can copy the template from [`.env.example`](./.env.example).
+### CALENDAR_MCP_AUTH_TOKEN kahan se milega?
 
-## Get the keys
+Ye Google OAuth Bearer token hai jo Google Calendar MCP server authenticate karta hai.
 
-1. Create `ANTHROPIC_API_KEY` from [Anthropic Console](https://console.anthropic.com/settings/keys).
-2. Open [CalendarMCP docs](https://calendarmcp.ai/docs) and go to `calendarmcp.ai`.
-3. Connect your Google Calendar there.
-4. Copy your dashboard API key and save it as `CALENDAR_MCP_AUTH_TOKEN`.
+**Option A — Claude.ai se copy karo (Easiest):**
+Browser DevTools open karo (F12) jab claude.ai use kar rahe ho → Network tab → 
+koi bhi calendar action karo → request mein `authorization_token` value copy karo.
 
-## Important note
+**Option B — Google OAuth directly:**
+1. console.cloud.google.com → APIs & Services → Credentials
+2. OAuth 2.0 Client ID banao
+3. Google Calendar API enable karo
+4. OAuth flow se access token lo
 
-This repo is now configured to use CalendarMCP by default. If you stay on that provider, you usually do not need to set `CALENDAR_MCP_URL` manually.
-
-## Deploy on Vercel
-
-1. Push this repo to GitHub.
-2. Import the repo into Vercel.
-3. Add at least `ANTHROPIC_API_KEY` and `CALENDAR_MCP_AUTH_TOKEN`.
-4. Redeploy.
-
-The app no longer stores API keys in the browser. Secrets stay on the server and the front-end talks to `/api/calendar`.
+## Local Development
+```bash
+npm install
+# .env.local file banao aur variables daalo
+npm run dev
+```
