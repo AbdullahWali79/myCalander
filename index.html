@@ -516,11 +516,11 @@
       </div>
       <div class="setup-item">
         <strong>CALENDAR_MCP_AUTH_TOKEN</strong>
-        <span>Google Calendar MCP ya kisi compatible calendar MCP server ka access token.</span>
+        <span>CalendarMCP dashboard se milne wali API key. Pehle `calendarmcp.ai` par Google Calendar connect karo.</span>
       </div>
       <div class="setup-item">
         <strong>CALENDAR_MCP_URL</strong>
-        <span>Optional. Default Google Calendar MCP URL use hota hai; custom MCP ho to yahan set karo.</span>
+        <span>Optional. Default `https://calendarmcp.ai/api/mcp` already configured hai.</span>
       </div>
       <div class="setup-item">
         <strong>APP_TIMEZONE</strong>
@@ -529,7 +529,7 @@
     </div>
     <button class="btn-primary" onclick="checkStatus()">Re-check Backend →</button>
     <div class="hint-box">
-      Vercel Dashboard → Project → Settings → Environment Variables mein values add karo. Secrets ab client-side localStorage mein expose nahi hongi.
+      Vercel Dashboard → Project → Settings → Environment Variables mein values add karo. Recommended provider: `calendarmcp.ai`. Secrets ab client-side localStorage mein expose nahi hongi.
     </div>
   </div>
 </div>

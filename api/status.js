@@ -1,4 +1,4 @@
-const DEFAULT_MCP_URL = "https://calendarmcp.googleapis.com/mcp/v1";
+const DEFAULT_MCP_URL = "https://calendarmcp.ai/api/mcp";
 const DEFAULT_MCP_NAME = "google-calendar";
 
 function getStatus() {

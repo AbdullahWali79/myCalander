@@ -1,6 +1,6 @@
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
 const DEFAULT_MODEL = "claude-sonnet-4-20250514";
-const DEFAULT_MCP_URL = "https://calendarmcp.googleapis.com/mcp/v1";
+const DEFAULT_MCP_URL = "https://calendarmcp.ai/api/mcp";
 const DEFAULT_MCP_NAME = "google-calendar";
 
 function getConfig() {
