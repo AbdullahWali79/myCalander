@@ -53,6 +53,9 @@ Please create this event now and confirm with event details.`;
       type: 'url',
       url: CALENDAR_MCP_URL,
       name: 'google-calendar',
+      tool_configuration: {
+        enabled: true,
+      },
     };
     if (CALENDAR_MCP_AUTH_TOKEN) {
       mcpServer.authorization_token = CALENDAR_MCP_AUTH_TOKEN;
@@ -64,7 +67,6 @@ Please create this event now and confirm with event details.`;
       system: sys,
       messages: [{ role: 'user', content: userMsg }],
       mcp_servers: [mcpServer],
-      tools: [{ type: 'mcp_toolset', mcp_server_name: 'google-calendar' }],
     };
 
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -73,7 +75,7 @@ Please create this event now and confirm with event details.`;
         'Content-Type': 'application/json',
         'x-api-key': ANTHROPIC_API_KEY,
         'anthropic-version': '2023-06-01',
-        'anthropic-beta': 'mcp-client-2025-11-20',
+        'anthropic-beta': 'mcp-client-2025-04-04',
       },
       body: JSON.stringify(body),
     });
