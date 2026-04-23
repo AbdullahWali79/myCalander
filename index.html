@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>My Calendar Manager - Vercel Ready</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.15);
+    --text: #f0f2ff;
+    --muted: #8890b0;
+    --accent: #5b6ef5;
+    --accent2: #7c8dff;
+    --urgent: #f04f5c;
+    --success: #3ecf8e;
+    --warn: #f5a623;
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: "DM Sans", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 0 60px;
+  }
+
+  .topbar {
+    width: 100%;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(10px);
+  }
+
+  .topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent), #9b6ef5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+  }
+
+  .logo-text { font-size: 15px; font-weight: 600; color: var(--text); }
+  .logo-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+  .api-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: background 0.3s;
+  }
+
+  .status-dot.connected {
+    background: var(--success);
+    box-shadow: 0 0 6px var(--success);
+  }
+
+  .status-dot.warning {
+    background: var(--warn);
+    box-shadow: 0 0 6px rgba(245, 166, 35, 0.5);
+  }
+
+  .status-dot.error {
+    background: var(--urgent);
+    box-shadow: 0 0 6px rgba(240, 79, 92, 0.5);
+  }
+
+  .setup-screen {
+    width: 100%;
+    max-width: 540px;
+    margin: 80px auto 0;
+    padding: 0 20px;
+  }
+
+  .setup-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 36px;
+  }
+
+  .setup-card h2 { font-size: 22px; font-weight: 600; margin-bottom: 8px; }
+  .setup-card p {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-bottom: 18px;
+  }
+
+  .setup-card code {
+    font-family: "DM Mono", monospace;
+    color: var(--text);
+    background: rgba(255,255,255,0.05);
+    padding: 2px 6px;
+    border-radius: 6px;
+  }
+
+  .setup-list {
+    display: grid;
+    gap: 10px;
+    margin: 18px 0 22px;
+  }
+
+  .setup-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+  }
+
+  .setup-item strong {
+    display: block;
+    font-size: 12px;
+    margin-bottom: 4px;
+    font-family: "DM Mono", monospace;
+  }
+
+  .setup-item span {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .btn-primary {
+    width: 100%;
+    padding: 13px;
+    background: linear-gradient(135deg, var(--accent), #9b6ef5);
+    border: none;
+    border-radius: var(--radius-sm);
+    color: #fff;
+    font-family: "DM Sans", sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-primary:active { transform: scale(0.99); }
+
+  .hint-box {
+    background: rgba(91,110,245,0.1);
+    border: 1px solid rgba(91,110,245,0.2);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-size: 12px;
+    color: #8890b0;
+    margin-top: 16px;
+    line-height: 1.7;
+  }
+
+  .main-app {
+    width: 100%;
+    max-width: 680px;
+    padding: 32px 20px 0;
+    display: none;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 5px;
+  }
+
+  .tab {
+    flex: 1;
+    padding: 9px 12px;
+    border: none;
+    background: none;
+    color: var(--muted);
+    font-family: "DM Sans", sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 10px;
+    transition: all 0.2s;
+  }
+
+  .tab.active { background: var(--surface2); color: var(--text); }
+  .tab:hover:not(.active) { color: var(--text); }
+
+  .section { display: none; }
+  .section.active { display: block; }
+
+  .quick-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .quick-btn {
+    padding: 14px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .quick-btn:hover {
+    border-color: var(--border2);
+    background: var(--surface2);
+  }
+
+  .quick-btn .qicon { font-size: 18px; display: block; margin-bottom: 6px; }
+  .quick-btn .qlabel { font-size: 13px; font-weight: 500; color: var(--text); display: block; }
+  .quick-btn .qdesc { font-size: 11px; color: var(--muted); margin-top: 2px; display: block; }
+
+  .output-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    min-height: 120px;
+  }
+
+  .output-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .output-header span {
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .output-body {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.8;
+    white-space: pre-wrap;
+    min-height: 60px;
+    font-family: "DM Mono", monospace;
+  }
+
+  .output-body.loaded {
+    color: var(--text);
+    font-family: "DM Sans", sans-serif;
+  }
+
+  .loader {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .loader span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 1.2s infinite;
+  }
+
+  .loader span:nth-child(2) { animation-delay: 0.2s; }
+  .loader span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes pulse {
+    0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+    40% { opacity: 1; transform: scale(1); }
+  }
+
+  .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .form-group { margin-bottom: 14px; }
+
+  .form-group label {
+    font-size: 11px;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    padding: 11px 13px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: "DM Sans", sans-serif;
+    font-size: 13px;
+    outline: none;
+    transition: border 0.2s;
+    -webkit-appearance: none;
+  }
+
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    border-color: var(--accent);
+  }
+
+  .form-group textarea { height: 80px; resize: vertical; }
+  .form-group select option { background: var(--surface2); }
+
+  .urgent-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    margin-bottom: 14px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  .urgent-row.checked {
+    border-color: rgba(240,79,92,0.4);
+    background: rgba(240,79,92,0.06);
+  }
+
+  .urgent-row input {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--urgent);
+  }
+
+  .urgent-row label {
+    font-size: 13px;
+    color: var(--text);
+    cursor: pointer;
+  }
+
+  .urgent-badge {
+    display: inline-block;
+    background: rgba(240,79,92,0.15);
+    color: var(--urgent);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-left: 4px;
+    letter-spacing: 0.5px;
+  }
+
+  .submit-btn {
+    width: 100%;
+    padding: 13px;
+    background: linear-gradient(135deg, var(--accent), #9b6ef5);
+    border: none;
+    border-radius: var(--radius-sm);
+    color: #fff;
+    font-family: "DM Sans", sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+
+  .submit-btn:hover { opacity: 0.88; }
+  .submit-btn:active { transform: scale(0.99); }
+  .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .result-card {
+    margin-top: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    font-size: 13px;
+    color: var(--muted);
+    display: none;
+  }
+
+  .result-card.show { display: block; }
+  .result-card.success { border-color: rgba(62,207,142,0.3); color: var(--success); }
+  .result-card.error { border-color: rgba(240,79,92,0.3); color: var(--urgent); }
+
+  .urgent-info {
+    background: rgba(240,79,92,0.07);
+    border: 1px solid rgba(240,79,92,0.2);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: #f08090;
+    line-height: 1.7;
+  }
+
+  .status-grid {
+    display: grid;
+    gap: 12px;
+    margin-top: 10px;
+  }
+
+  .status-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+  }
+
+  .status-item label {
+    display: block;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .status-item .value {
+    display: block;
+    font-size: 13px;
+    color: var(--text);
+    font-family: "DM Mono", monospace;
+    word-break: break-word;
+  }
+
+  .footer {
+    margin-top: 40px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  @media (max-width: 520px) {
+    .quick-grid { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+    .topbar { padding: 14px 18px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo-dot">📅</div>
+    <div>
+      <div class="logo-text">My Calendar Manager</div>
+      <div class="logo-sub">Vercel deployment mode</div>
+    </div>
+  </div>
+  <div class="api-status">
+    <div class="status-dot" id="statusDot"></div>
+    <span id="statusText">Checking backend...</span>
+  </div>
+</div>
+
+<div class="setup-screen" id="setupScreen">
+  <div class="setup-card">
+    <h2>Server Setup Required</h2>
+    <p id="setupMessage">
+      Ye app ab browser mein secret key save nahi karti. Vercel par server-side env vars set karo, phir page reload ya re-check karo.
+    </p>
+    <div class="setup-list">
+      <div class="setup-item">
+        <strong>ANTHROPIC_API_KEY</strong>
+        <span>Claude API key jo server-side request karegi.</span>
+      </div>
+      <div class="setup-item">
+        <strong>CALENDAR_MCP_AUTH_TOKEN</strong>
+        <span>Google Calendar MCP ya kisi compatible calendar MCP server ka access token.</span>
+      </div>
+      <div class="setup-item">
+        <strong>CALENDAR_MCP_URL</strong>
+        <span>Optional. Default Google Calendar MCP URL use hota hai; custom MCP ho to yahan set karo.</span>
+      </div>
+      <div class="setup-item">
+        <strong>APP_TIMEZONE</strong>
+        <span>Optional. Default <code>Asia/Karachi</code>. Calendar prompts isi timezone mein bheje jayenge.</span>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="checkStatus()">Re-check Backend →</button>
+    <div class="hint-box">
+      Vercel Dashboard → Project → Settings → Environment Variables mein values add karo. Secrets ab client-side localStorage mein expose nahi hongi.
+    </div>
+  </div>
+</div>
+
+<div class="main-app" id="mainApp">
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('view')">📋 View Meetings</button>
+    <button class="tab" onclick="switchTab('add')">➕ Add Event</button>
+    <button class="tab" onclick="switchTab('urgent')">🔴 Urgent</button>
+    <button class="tab" onclick="switchTab('settings')">⚙️ Settings</button>
+  </div>
+
+  <div id="tab-view" class="section active">
+    <div class="quick-grid">
+      <button class="quick-btn" onclick="loadMeetings('today')">
+        <span class="qicon">🗓️</span>
+        <span class="qlabel">Today's Meetings</span>
+        <span class="qdesc">Aaj ki sari meetings</span>
+      </button>
+      <button class="quick-btn" onclick="loadMeetings('tomorrow')">
+        <span class="qicon">📅</span>
+        <span class="qlabel">Tomorrow</span>
+        <span class="qdesc">Kal ka schedule</span>
+      </button>
+      <button class="quick-btn" onclick="loadMeetings('week')">
+        <span class="qicon">📆</span>
+        <span class="qlabel">This Week</span>
+        <span class="qdesc">7 din ki meetings</span>
+      </button>
+      <button class="quick-btn" onclick="loadMeetings('urgent_view')">
+        <span class="qicon">🔴</span>
+        <span class="qlabel">Urgent Only</span>
+        <span class="qdesc">Sirf urgent meetings</span>
+      </button>
+    </div>
+    <div class="output-card">
+      <div class="output-header">
+        <span id="outputLabel">Results</span>
+      </div>
+      <div class="output-body" id="viewOutput">Upar se koi button click karo meetings dekhne ke liye...</div>
+    </div>
+  </div>
+
+  <div id="tab-add" class="section">
+    <div class="form-card">
+      <div class="form-group">
+        <label>Meeting Title *</label>
+        <input type="text" id="evtTitle" placeholder="e.g. Client call with Ahmed bhai" />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Date *</label>
+          <input type="date" id="evtDate" />
+        </div>
+        <div class="form-group">
+          <label>Start Time *</label>
+          <input type="time" id="evtTime" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Duration</label>
+        <select id="evtDuration">
+          <option value="30">30 minutes</option>
+          <option value="60" selected>1 hour</option>
+          <option value="90">1.5 hours</option>
+          <option value="120">2 hours</option>
+          <option value="180">3 hours</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Location (optional)</label>
+        <input type="text" id="evtLocation" placeholder="e.g. Zoom, Office, Lahore" />
+      </div>
+      <div class="form-group">
+        <label>Description (optional)</label>
+        <textarea id="evtDesc" placeholder="Meeting agenda ya koi note..."></textarea>
+      </div>
+      <div class="urgent-row" id="urgentRow" onclick="toggleUrgent()">
+        <input type="checkbox" id="evtUrgent" onclick="event.stopPropagation()" onchange="syncUrgentRow()" />
+        <label for="evtUrgent">Mark as <span class="urgent-badge">URGENT</span> meeting</label>
+      </div>
+      <button class="submit-btn" id="addBtn" onclick="addEvent()">Add to Google Calendar →</button>
+    </div>
+    <div class="result-card" id="addResult"></div>
+  </div>
+
+  <div id="tab-urgent" class="section">
+    <div class="urgent-info">
+      🔴 Ye tab sirf un meetings ko filter karta hai jisme <strong>"urgent"</strong>, <strong>"important"</strong>, ya <strong>"ASAP"</strong> likha ho title ya description mein.
+    </div>
+    <div class="quick-grid">
+      <button class="quick-btn" onclick="loadUrgent('week')">
+        <span class="qicon">📋</span>
+        <span class="qlabel">Urgent This Week</span>
+        <span class="qdesc">7 din ki urgent list</span>
+      </button>
+      <button class="quick-btn" onclick="loadUrgent('month')">
+        <span class="qicon">🗂️</span>
+        <span class="qlabel">Urgent This Month</span>
+        <span class="qdesc">Is mahine urgent</span>
+      </button>
+    </div>
+    <div class="output-card">
+      <div class="output-header">
+        <span>Urgent Meetings</span>
+      </div>
+      <div class="output-body" id="urgentOutput">Upar se button click karo urgent meetings dekhne ke liye...</div>
+    </div>
+  </div>
+
+  <div id="tab-settings" class="section">
+    <div class="form-card">
+      <div class="status-grid">
+        <div class="status-item">
+          <label>Backend Status</label>
+          <div class="value" id="backendStatusValue">Checking...</div>
+        </div>
+        <div class="status-item">
+          <label>Timezone</label>
+          <div class="value" id="timezoneValue">Asia/Karachi</div>
+        </div>
+        <div class="status-item">
+          <label>MCP Server</label>
+          <div class="value" id="mcpServerValue">google-calendar</div>
+        </div>
+        <div class="status-item">
+          <label>Backend Message</label>
+          <div class="value" id="backendMessageValue">Waiting for backend check...</div>
+        </div>
+      </div>
+      <button class="submit-btn" onclick="checkStatus()" style="margin-top: 16px;">Refresh Backend Status →</button>
+      <div class="hint-box">
+        Secure mode enabled: API secrets Vercel ke environment variables mein rehti hain. Browser sirf `/api/calendar` endpoint ko call karta hai.
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Powered by Claude API + MCP on Vercel
+  </div>
+</div>
+
+<script>
+const APP_STATE = {
+  configured: false,
+  timezone: "Asia/Karachi",
+  mcpName: "google-calendar",
+  backendMessage: ""
+};
+
+window.onload = async () => {
+  setDefaultDate();
+  await checkStatus();
+};
+
+function setDefaultDate() {
+  const dateEl = document.getElementById("evtDate");
+  if (dateEl) dateEl.value = formatDateInTimezone(new Date());
+}
+
+function formatDateInTimezone(date) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: APP_STATE.timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(date);
+
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return values.year + "-" + values.month + "-" + values.day;
+}
+
+function addDays(dateString, days) {
+  const [year, month, day] = dateString.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+function formatTime(date) {
+  return String(date.getHours()).padStart(2, "0") + ":" + String(date.getMinutes()).padStart(2, "0");
+}
+
+function computeEnd(date, time, duration) {
+  const [year, month, day] = date.split("-").map(Number);
+  const [hours, minutes] = time.split(":").map(Number);
+  const start = new Date(year, month - 1, day, hours, minutes, 0, 0);
+  const end = new Date(start.getTime() + Number(duration) * 60000);
+
+  return {
+    endDate: [
+      end.getFullYear(),
+      String(end.getMonth() + 1).padStart(2, "0"),
+      String(end.getDate()).padStart(2, "0")
+    ].join("-"),
+    endTime: formatTime(end)
+  };
+}
+
+async function checkStatus() {
+  setStatus("loading", "Checking backend...");
+
+  try {
+    const res = await fetch("/api/status", { cache: "no-store" });
+    const data = await res.json();
+
+    APP_STATE.configured = Boolean(data.configured);
+    APP_STATE.timezone = data.timezone || "Asia/Karachi";
+    APP_STATE.mcpName = data.mcpName || "google-calendar";
+    APP_STATE.backendMessage = data.message || "";
+
+    renderSettings(data);
+
+    if (APP_STATE.configured) {
+      showApp();
+      setStatus("connected", "Connected");
+    } else {
+      showSetup(data.message || "Backend setup required.");
+      setStatus("warning", "Setup required");
+    }
+  } catch (error) {
+    APP_STATE.configured = false;
+    APP_STATE.backendMessage = error.message;
+    renderSettings({
+      configured: false,
+      timezone: APP_STATE.timezone,
+      mcpName: APP_STATE.mcpName,
+      message: "Backend status endpoint reach nahi ho raha."
+    });
+    showSetup("Backend status endpoint reach nahi ho raha. Vercel deploy aur API routes check karo.");
+    setStatus("error", "Connection error");
+  }
+}
+
+function renderSettings(data) {
+  document.getElementById("backendStatusValue").textContent = data.configured ? "Configured" : "Setup required";
+  document.getElementById("timezoneValue").textContent = data.timezone || "Asia/Karachi";
+  document.getElementById("mcpServerValue").textContent = data.mcpName || "google-calendar";
+  document.getElementById("backendMessageValue").textContent = data.message || "No backend message.";
+}
+
+function showSetup(message) {
+  document.getElementById("setupScreen").style.display = "block";
+  document.getElementById("mainApp").style.display = "none";
+  document.getElementById("setupMessage").textContent = message;
+}
+
+function showApp() {
+  document.getElementById("setupScreen").style.display = "none";
+  document.getElementById("mainApp").style.display = "block";
+  setDefaultDate();
+}
+
+function setStatus(state, text) {
+  const dot = document.getElementById("statusDot");
+  const label = document.getElementById("statusText");
+
+  dot.className = "status-dot";
+
+  if (state === "connected") {
+    dot.classList.add("connected");
+  } else if (state === "warning") {
+    dot.classList.add("warning");
+  } else if (state === "error") {
+    dot.classList.add("error");
+  }
+
+  label.textContent = text;
+}
+
+function switchTab(tab) {
+  const tabs = ["view", "add", "urgent", "settings"];
+  document.querySelectorAll(".tab").forEach((button, index) => {
+    button.classList.toggle("active", tabs[index] === tab);
+  });
+  document.querySelectorAll(".section").forEach((section) => section.classList.remove("active"));
+  document.getElementById("tab-" + tab).classList.add("active");
+}
+
+function toggleUrgent() {
+  const checkbox = document.getElementById("evtUrgent");
+  checkbox.checked = !checkbox.checked;
+  syncUrgentRow();
+}
+
+function syncUrgentRow() {
+  const checkbox = document.getElementById("evtUrgent");
+  const row = document.getElementById("urgentRow");
+  row.classList.toggle("checked", checkbox.checked);
+}
+
+async function callCalendarAPI(systemPrompt, userMessage) {
+  const res = await fetch("/api/calendar", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ systemPrompt, userMessage })
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(data.error || "API call failed");
+  }
+
+  return data.text || "Koi response nahi mila.";
+}
+
+function showLoading(elId) {
+  const el = document.getElementById(elId);
+  el.innerHTML = '<div class="loader"><span></span><span></span><span></span>&nbsp; Loading...</div>';
+  el.className = "output-body";
+}
+
+function showResult(elId, text) {
+  const el = document.getElementById(elId);
+  el.textContent = text;
+  el.className = "output-body loaded";
+}
+
+async function loadMeetings(type) {
+  if (!APP_STATE.configured) {
+    showSetup("Pehle Vercel env vars configure karo.");
+    return;
+  }
+
+  const todayStr = formatDateInTimezone(new Date());
+  const tomorrowStr = addDays(todayStr, 1);
+  const next7Str = addDays(todayStr, 7);
+
+  let userMessage = "";
+  const systemPrompt = "You are a calendar assistant. Use the available calendar MCP tools to fetch events and display them clearly. Format the output with date, time, title and location. Mark [URGENT] if title or description includes urgent, important, ASAP, or [URGENT]. Be concise. If no events exist, say 'Koi meeting nahi hai.'";
+
+  const labels = {
+    today: "Today's Meetings",
+    tomorrow: "Tomorrow's Meetings",
+    week: "This Week's Meetings",
+    urgent_view: "Urgent Meetings"
+  };
+
+  document.getElementById("outputLabel").textContent = labels[type] || "Results";
+  showLoading("viewOutput");
+  setStatus("loading", "Loading...");
+
+  if (type === "today") {
+    userMessage = "Show all my Google Calendar events for today " + todayStr + " in timezone " + APP_STATE.timezone + ".";
+  } else if (type === "tomorrow") {
+    userMessage = "Show all my Google Calendar events for tomorrow " + tomorrowStr + " in timezone " + APP_STATE.timezone + ".";
+  } else if (type === "week") {
+    userMessage = "Show all my Google Calendar events from " + todayStr + " to " + next7Str + " in timezone " + APP_STATE.timezone + ".";
+  } else if (type === "urgent_view") {
+    userMessage = "Search my Google Calendar for events with urgent, important, ASAP, or [URGENT] in title or description from " + todayStr + " to " + next7Str + " in timezone " + APP_STATE.timezone + ".";
+  }
+
+  try {
+    const result = await callCalendarAPI(systemPrompt, userMessage);
+    showResult("viewOutput", result);
+    setStatus("connected", "Connected");
+  } catch (error) {
+    showResult("viewOutput", "❌ Error: " + error.message);
+    setStatus("error", "Request failed");
+  }
+}
+
+async function loadUrgent(range) {
+  if (!APP_STATE.configured) {
+    showSetup("Pehle Vercel env vars configure karo.");
+    return;
+  }
+
+  const todayStr = formatDateInTimezone(new Date());
+  const endStr = addDays(todayStr, range === "week" ? 7 : 30);
+
+  showLoading("urgentOutput");
+  setStatus("loading", "Loading...");
+
+  const systemPrompt = "You are a calendar assistant. Find and list only urgent or important events. Format the output with date, time, title, and location when available. If none exist, say 'Koi urgent meeting nahi mili.'";
+  const userMessage = "Search my Google Calendar for events with keywords urgent, important, ASAP, or [URGENT] in title or description between " + todayStr + " and " + endStr + " in timezone " + APP_STATE.timezone + ".";
+
+  try {
+    const result = await callCalendarAPI(systemPrompt, userMessage);
+    showResult("urgentOutput", result);
+    setStatus("connected", "Connected");
+  } catch (error) {
+    showResult("urgentOutput", "❌ Error: " + error.message);
+    setStatus("error", "Request failed");
+  }
+}
+
+async function addEvent() {
+  const title = document.getElementById("evtTitle").value.trim();
+  const date = document.getElementById("evtDate").value;
+  const time = document.getElementById("evtTime").value;
+  const duration = document.getElementById("evtDuration").value;
+  const location = document.getElementById("evtLocation").value.trim();
+  const desc = document.getElementById("evtDesc").value.trim();
+  const urgent = document.getElementById("evtUrgent").checked;
+
+  if (!title || !date || !time) {
+    showAddResult("❌ Title, Date aur Time zaroor bharo!", "error");
+    return;
+  }
+
+  if (!APP_STATE.configured) {
+    showAddResult("❌ Backend configured nahi hai. Pehle Vercel env vars set karo.", "error");
+    return;
+  }
+
+  const addButton = document.getElementById("addBtn");
+  addButton.disabled = true;
+  addButton.textContent = "Adding...";
+  setStatus("loading", "Creating...");
+
+  const end = computeEnd(date, time, duration);
+  const finalTitle = urgent ? "[URGENT] " + title : title;
+  const finalDesc = urgent ? "URGENT MEETING\n\n" + desc : desc;
+
+  const systemPrompt = "You are a calendar assistant. Create Google Calendar events using the available calendar MCP tools. After creating the event, confirm the title, date, start time, end time, and timezone. Be brief.";
+  const userMessage = [
+    "Create a Google Calendar event with these details:",
+    "Title: " + finalTitle,
+    "Start date: " + date,
+    "Start time: " + time,
+    "End date: " + end.endDate,
+    "End time: " + end.endTime,
+    "Location: " + (location || "Not specified"),
+    "Description: " + (finalDesc || "No description"),
+    "Timezone: " + APP_STATE.timezone
+  ].join("\n");
+
+  try {
+    const result = await callCalendarAPI(systemPrompt, userMessage);
+    showAddResult("✅ " + result, "success");
+    setStatus("connected", "Connected");
+    resetAddForm();
+  } catch (error) {
+    showAddResult("❌ Error: " + error.message, "error");
+    setStatus("error", "Request failed");
+  }
+
+  addButton.disabled = false;
+  addButton.textContent = "Add to Google Calendar →";
+}
+
+function resetAddForm() {
+  document.getElementById("evtTitle").value = "";
+  document.getElementById("evtTime").value = "";
+  document.getElementById("evtLocation").value = "";
+  document.getElementById("evtDesc").value = "";
+  document.getElementById("evtUrgent").checked = false;
+  syncUrgentRow();
+  setDefaultDate();
+}
+
+function showAddResult(text, type) {
+  const el = document.getElementById("addResult");
+  el.textContent = text;
+  el.className = "result-card show " + type;
+}
+</script>
+</body>
+</html>
